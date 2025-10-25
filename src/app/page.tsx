@@ -8,6 +8,10 @@ export default function Home() {
   const { data: session, status } = useSession();
   const [isGenerating, setIsGenerating] = useState(false);
   const [portfolio, setPortfolio] = useState(null);
+  const [generatedPortfolio, setGeneratedPortfolio] = useState<string | null>(
+    null
+  );
+  const [selectedAI, setSelectedAI] = useState<"gemini" | "gpt">("gemini");
 
   const generatePortfolio = async () => {
     if (!session?.accessToken) return;
@@ -66,6 +70,25 @@ export default function Home() {
 
       console.log("Portfolio data:", portfolioData);
       setPortfolio(portfolioData);
+
+      // 4. 선택된 AI를 사용하여 포트폴리오 생성
+      const aiEndpoint = selectedAI === "gemini" 
+        ? "/api/ai/generate-portfolio" 
+        : "/api/ai/generate-portfolio-gpt";
+      
+      const aiResponse = await fetch(aiEndpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ portfolioData }),
+      });
+
+      if (aiResponse.ok) {
+        const aiResult = await aiResponse.json();
+        setGeneratedPortfolio(aiResult.portfolio);
+        console.log("Generated portfolio:", aiResult.portfolio);
+      } else {
+        console.error("Failed to generate portfolio with AI");
+      }
     } catch (error) {
       console.error("Error generating portfolio:", error);
     } finally {
@@ -109,12 +132,39 @@ export default function Home() {
                 </div>
               </div>
 
-              <div className="flex flex-col gap-4 w-full md:flex-row">
-                <button
-                  onClick={generatePortfolio}
-                  disabled={isGenerating}
-                  className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-blue-600 px-6 text-white transition-colors hover:bg-blue-700 disabled:bg-blue-400 md:w-auto"
-                >
+              <div className="flex flex-col gap-4 w-full">
+                {/* AI 모델 선택 */}
+                <div className="flex gap-4 justify-center">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="ai-model"
+                      value="gemini"
+                      checked={selectedAI === "gemini"}
+                      onChange={(e) => setSelectedAI(e.target.value as "gemini" | "gpt")}
+                      className="text-blue-600"
+                    />
+                    <span className="text-sm font-medium">🤖 Gemini AI</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="ai-model"
+                      value="gpt"
+                      checked={selectedAI === "gpt"}
+                      onChange={(e) => setSelectedAI(e.target.value as "gemini" | "gpt")}
+                      className="text-blue-600"
+                    />
+                    <span className="text-sm font-medium">🧠 GPT-4o</span>
+                  </label>
+                </div>
+                
+                <div className="flex flex-col gap-4 w-full md:flex-row">
+                  <button
+                    onClick={generatePortfolio}
+                    disabled={isGenerating}
+                    className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-blue-600 px-6 text-white transition-colors hover:bg-blue-700 disabled:bg-blue-400 md:w-auto"
+                  >
                   {isGenerating ? (
                     <>
                       <svg
@@ -166,10 +216,25 @@ export default function Home() {
                 </button>
               </div>
 
+              {generatedPortfolio && (
+                <div className="mt-8 w-full max-w-4xl">
+                  <h3 className="text-2xl font-bold text-black dark:text-zinc-50 mb-6">
+                    {selectedAI === "gemini" ? "🤖 Gemini AI" : "🧠 GPT-4o"} 생성 포트폴리오
+                  </h3>
+                  <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-6 shadow-lg">
+                    <div className="prose prose-gray dark:prose-invert max-w-none">
+                      <div className="whitespace-pre-wrap text-sm leading-relaxed">
+                        {generatedPortfolio}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {portfolio && (
                 <div className="mt-8 w-full max-w-4xl">
                   <h3 className="text-2xl font-bold text-black dark:text-zinc-50 mb-6">
-                    포트폴리오 데이터
+                    📊 수집된 데이터
                   </h3>
                   <div className="bg-gray-100 dark:bg-gray-800 p-6 rounded-lg">
                     <pre className="text-sm overflow-auto max-h-96">

@@ -1,0 +1,12 @@
+{
+    "ui_library": "shadcn-ui",
+    "type_checking": true,
+    "preferred_language": "TypeScript",
+    "component_folder": "components",
+    "styles": "Tailwind CSS",
+    "best_practices": [
+        "Favor React Server Components over Client Components.",
+        "Use Zod for all schema validation.",
+        "Implement clear custom error classes for robust error handling."
+    ]
+}

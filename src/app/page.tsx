@@ -22,16 +22,54 @@ export default function Home() {
   const portfolioRef = useRef<HTMLDivElement>(null);
 
   const downloadPDF = async () => {
-    if (!portfolioRef.current) return;
+    if (!portfolioRef.current) {
+      alert("포트폴리오를 먼저 생성해주세요.");
+      return;
+    }
 
     try {
-      const canvas = await html2canvas(portfolioRef.current, {
-        scale: 2,
-        backgroundColor: "#ffffff",
-        logging: false,
+      // 로딩 표시
+      const button = document.activeElement as HTMLButtonElement;
+      if (button) {
+        button.disabled = true;
+        button.textContent = "PDF 생성 중...";
+      }
+
+      // lab() 색상 에러 방지를 위해 전역 스타일 추가
+      const originalBodyStyle = document.body.style.cssText;
+      const originalLinks = Array.from(document.querySelectorAll('link[rel="stylesheet"]'));
+      
+      // 임시로 모든 외부 스타일시트 제거
+      originalLinks.forEach(link => {
+        link.setAttribute('data-temp-remove', 'true');
+        link.remove();
       });
 
-      const imgData = canvas.toDataURL("image/png");
+      // 안전한 인라인 스타일 추가
+      const safeStyle = document.createElement('style');
+      safeStyle.id = 'pdf-safe-style';
+      safeStyle.textContent = `
+        body, body * {
+          color: #000000 !important;
+          background-color: #ffffff !important;
+          border-color: #cccccc !important;
+        }
+      `;
+      document.head.appendChild(safeStyle);
+
+      const canvas = await html2canvas(portfolioRef.current, {
+        scale: 1.5,
+        backgroundColor: "#ffffff",
+        logging: false,
+        useCORS: true,
+        allowTaint: false,
+        windowWidth: portfolioRef.current.scrollWidth,
+        windowHeight: portfolioRef.current.scrollHeight,
+        scrollX: 0,
+        scrollY: 0,
+      });
+
+      const imgData = canvas.toDataURL("image/png", 1.0);
       const pdf = new jsPDF({
         orientation: "portrait",
         unit: "mm",
@@ -42,25 +80,95 @@ export default function Home() {
       const pdfHeight = pdf.internal.pageSize.getHeight();
       const imgWidth = canvas.width;
       const imgHeight = canvas.height;
-      const ratio = Math.min(pdfWidth / imgWidth, pdfHeight / imgHeight);
-      const imgX = (pdfWidth - imgWidth * ratio) / 2;
-      const imgY = 0;
-
-      pdf.addImage(
-        imgData,
-        "PNG",
-        imgX,
-        imgY,
-        imgWidth * ratio,
-        imgHeight * ratio
-      );
+      
+      // 이미지가 한 페이지에 들어가도록 비율 계산
+      const imgAspect = imgWidth / imgHeight;
+      const pdfAspect = pdfWidth / pdfHeight;
+      
+      let finalWidth = pdfWidth;
+      let finalHeight = pdfHeight;
+      
+      if (imgAspect > pdfAspect) {
+        // 이미지가 가로로 더 길면
+        finalHeight = pdfWidth / imgAspect;
+        finalWidth = pdfWidth;
+      } else {
+        // 이미지가 세로로 더 길면
+        finalWidth = pdfHeight * imgAspect;
+        finalHeight = pdfHeight;
+      }
+      
+      // 페이지가 여러 장 필요할 경우 처리
+      let position = 0;
+      let remainingHeight = finalHeight;
+      
+      while (remainingHeight > 0) {
+        const pageHeight = Math.min(pdfHeight, remainingHeight);
+        const srcY = (finalHeight - remainingHeight) * (imgHeight / finalHeight);
+        
+        pdf.addImage(
+          imgData,
+          "PNG",
+          0,
+          (pdfHeight - pageHeight) / 2,
+          finalWidth,
+          finalHeight
+        );
+        
+        remainingHeight -= pdfHeight;
+        
+        if (remainingHeight > 0) {
+          pdf.addPage();
+        }
+      }
 
       pdf.save(
         `${session?.user?.name || "portfolio"}_portfolio_${new Date().toISOString().split("T")[0]}.pdf`
       );
+
+      // 스타일 원래대로 복원
+      safeStyle.remove();
+      originalLinks.forEach(link => {
+        if (link.hasAttribute('data-temp-remove')) {
+          document.head.appendChild(link);
+          link.removeAttribute('data-temp-remove');
+        }
+      });
+
+      // 버튼 원래대로
+      if (button) {
+        button.disabled = false;
+        button.innerHTML = `
+          <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          </svg>
+          PDF 다운로드
+        `;
+      }
     } catch (error) {
       console.error("Error generating PDF:", error);
-      alert("PDF 다운로드에 실패했습니다.");
+      alert("PDF 다운로드에 실패했습니다. 콘솔을 확인해주세요.");
+      
+      // 스타일 원래대로 복원
+      const safeStyle = document.getElementById('pdf-safe-style');
+      if (safeStyle) safeStyle.remove();
+      const originalLinks = document.querySelectorAll('[data-temp-remove="true"]');
+      originalLinks.forEach(link => {
+        document.head.appendChild(link);
+        link.removeAttribute('data-temp-remove');
+      });
+      
+      // 버튼 원래대로
+      const button = document.activeElement as HTMLButtonElement;
+      if (button) {
+        button.disabled = false;
+        button.innerHTML = `
+          <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          </svg>
+          PDF 다운로드
+        `;
+      }
     }
   };
 
@@ -337,10 +445,28 @@ export default function Home() {
                     ref={portfolioRef}
                     className="bg-gradient-to-br from-white to-gray-50 dark:from-gray-900 dark:to-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl p-8 md:p-12 shadow-2xl"
                   >
-                    <article className="prose prose-lg prose-gray dark:prose-invert max-w-none prose-headings:font-bold prose-h1:text-4xl prose-h2:text-3xl prose-h2:mt-8 prose-h3:text-2xl prose-p:text-gray-700 dark:prose-p:text-gray-300 prose-a:text-blue-600 dark:prose-a:text-blue-400 prose-a:no-underline hover:prose-a:underline prose-strong:text-gray-900 dark:prose-strong:text-gray-100 prose-code:text-pink-600 dark:prose-code:text-pink-400 prose-code:bg-gray-100 dark:prose-code:bg-gray-800 prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-pre:bg-gray-100 dark:prose-pre:bg-gray-800 prose-blockquote:border-l-blue-500 prose-blockquote:bg-blue-50 dark:prose-blockquote:bg-blue-900/20 prose-blockquote:py-2 prose-blockquote:px-4 prose-blockquote:rounded-r prose-ul:list-disc prose-ol:list-decimal">
+                    <article 
+                      className="prose prose-lg prose-gray dark:prose-invert w-full max-w-full text-left prose-headings:font-bold prose-h1:text-4xl prose-h2:text-3xl prose-h2:mt-8 prose-h3:text-2xl prose-p:text-gray-700 dark:prose-p:text-gray-300 prose-a:text-blue-600 dark:prose-a:text-blue-400 prose-a:no-underline hover:prose-a:underline prose-strong:text-gray-900 dark:prose-strong:text-gray-100 prose-code:text-pink-600 dark:prose-code:text-pink-400 prose-code:bg-gray-100 dark:prose-code:bg-gray-800 prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-pre:bg-gray-100 dark:prose-pre:bg-gray-800 prose-blockquote:border-l-blue-500 prose-blockquote:bg-blue-50 dark:prose-blockquote:bg-blue-900/20 prose-blockquote:py-2 prose-blockquote:px-4 prose-blockquote:rounded-r prose-ul:list-disc prose-ol:list-decimal"
+                    >
                       <ReactMarkdown
                         remarkPlugins={[remarkGfm]}
-                        rehypePlugins={[rehypeRaw, rehypeSanitize]}
+                        rehypePlugins={[
+                          rehypeRaw,
+                          [rehypeSanitize, {
+                            attributes: {
+                              '*': ['className', 'style'],
+                              img: ['src', 'alt', 'title', 'width', 'height'],
+                              a: ['href', 'target', 'rel']
+                            },
+                            tagNames: ['img', 'a', 'p', 'div', 'span', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'ul', 'ol', 'li', 'strong', 'em', 'code', 'pre', 'blockquote', 'br', 'hr']
+                          }]
+                        ]}
+                        components={{
+                          img: ({ node, ...props }) => (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img {...props} alt={props.alt || ''} loading="lazy" />
+                          )
+                        }}
                       >
                         {generatedPortfolio}
                       </ReactMarkdown>

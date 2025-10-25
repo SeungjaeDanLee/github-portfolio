@@ -1,5 +1,4 @@
 @import "tailwindcss";
-@import "@tailwindcss/typography";
 
 :root {
   --background: #ffffff;
@@ -24,4 +23,44 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+}
+
+/* 마크다운 이미지 처리 */
+.prose img {
+  max-width: 100% !important;
+  height: auto !important;
+  display: inline-block !important;
+  vertical-align: middle !important;
+}
+
+/* 완전 자동 줄바꿈 - 스크롤 절대 금지 */
+.prose * {
+  word-break: break-word !important;
+  overflow-wrap: break-word !important;
+  word-wrap: break-word !important;
+  max-width: 100% !important;
+  overflow: visible !important;
+  white-space: normal !important;
+}
+
+.prose p, .prose li, .prose td, .prose th, .prose div, .prose span, .prose a {
+  word-break: break-word !important;
+  overflow-wrap: break-word !important;
+  word-wrap: break-word !important;
+  white-space: normal !important;
+}
+
+/* 코드 블록도 줄바꿈 */
+.prose pre, .prose code {
+  word-break: break-word !important;
+  overflow-wrap: break-word !important;
+  white-space: pre-wrap !important;
+  max-width: 100% !important;
+  overflow: visible !important;
+}
+
+/* 링크와 인라인 요소 줄바꿈 */
+.prose a, .prose strong, .prose em {
+  word-break: break-all !important;
+  overflow-wrap: anywhere !important;
 }

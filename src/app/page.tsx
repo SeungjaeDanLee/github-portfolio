@@ -8,6 +8,10 @@ export default function Home() {
   const { data: session, status } = useSession();
   const [isGenerating, setIsGenerating] = useState(false);
   const [portfolio, setPortfolio] = useState(null);
+  const [generatedPortfolio, setGeneratedPortfolio] = useState<string | null>(
+    null
+  );
+  const [selectedAI, setSelectedAI] = useState<"gemini" | "gpt">("gemini");
 
   const generatePortfolio = async () => {
     if (!session?.accessToken) return;
@@ -66,6 +70,26 @@ export default function Home() {
 
       console.log("Portfolio data:", portfolioData);
       setPortfolio(portfolioData);
+
+      // 4. 선택된 AI를 사용하여 포트폴리오 생성
+      const aiEndpoint =
+        selectedAI === "gemini"
+          ? "/api/ai/generate-portfolio"
+          : "/api/ai/generate-portfolio-gpt";
+
+      const aiResponse = await fetch(aiEndpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ portfolioData }),
+      });
+
+      if (aiResponse.ok) {
+        const aiResult = await aiResponse.json();
+        setGeneratedPortfolio(aiResult.portfolio);
+        console.log("Generated portfolio:", aiResult.portfolio);
+      } else {
+        console.error("Failed to generate portfolio with AI");
+      }
     } catch (error) {
       console.error("Error generating portfolio:", error);
     } finally {
@@ -109,67 +133,115 @@ export default function Home() {
                 </div>
               </div>
 
-              <div className="flex flex-col gap-4 w-full md:flex-row">
-                <button
-                  onClick={generatePortfolio}
-                  disabled={isGenerating}
-                  className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-blue-600 px-6 text-white transition-colors hover:bg-blue-700 disabled:bg-blue-400 md:w-auto"
-                >
-                  {isGenerating ? (
-                    <>
-                      <svg
-                        className="h-5 w-5 animate-spin"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                      >
-                        <circle
-                          className="opacity-25"
-                          cx="12"
-                          cy="12"
-                          r="10"
-                          stroke="currentColor"
-                          strokeWidth="4"
-                        ></circle>
-                        <path
-                          className="opacity-75"
-                          fill="currentColor"
-                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                        ></path>
-                      </svg>
-                      생성 중...
-                    </>
-                  ) : (
-                    <>
-                      <svg
-                        className="h-5 w-5"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                        />
-                      </svg>
-                      포트폴리오 생성
-                    </>
-                  )}
-                </button>
+              <div className="flex flex-col gap-4 w-full">
+                {/* AI 모델 선택 */}
+                <div className="flex gap-4 justify-center">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="ai-model"
+                      value="gemini"
+                      checked={selectedAI === "gemini"}
+                      onChange={(e) =>
+                        setSelectedAI(e.target.value as "gemini" | "gpt")
+                      }
+                      className="text-blue-600"
+                    />
+                    <span className="text-sm font-medium">🤖 Gemini AI</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="ai-model"
+                      value="gpt"
+                      checked={selectedAI === "gpt"}
+                      onChange={(e) =>
+                        setSelectedAI(e.target.value as "gemini" | "gpt")
+                      }
+                      className="text-blue-600"
+                    />
+                    <span className="text-sm font-medium">🧠 GPT-4o</span>
+                  </label>
+                </div>
 
-                <button
-                  onClick={() => signOut()}
-                  className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-red-600 px-6 text-white transition-colors hover:bg-red-700 md:w-auto"
-                >
-                  로그아웃
-                </button>
+                <div className="flex flex-col gap-4 w-full md:flex-row">
+                  <button
+                    onClick={generatePortfolio}
+                    disabled={isGenerating}
+                    className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-blue-600 px-6 text-white transition-colors hover:bg-blue-700 disabled:bg-blue-400 md:w-auto"
+                  >
+                    {isGenerating ? (
+                      <>
+                        <svg
+                          className="h-5 w-5 animate-spin"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                        >
+                          <circle
+                            className="opacity-25"
+                            cx="12"
+                            cy="12"
+                            r="10"
+                            stroke="currentColor"
+                            strokeWidth="4"
+                          ></circle>
+                          <path
+                            className="opacity-75"
+                            fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                          ></path>
+                        </svg>
+                        생성 중...
+                      </>
+                    ) : (
+                      <>
+                        <svg
+                          className="h-5 w-5"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                          />
+                        </svg>
+                        포트폴리오 생성
+                      </>
+                    )}
+                  </button>
+
+                  <button
+                    onClick={() => signOut()}
+                    className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-red-600 px-6 text-white transition-colors hover:bg-red-700 md:w-auto"
+                  >
+                    로그아웃
+                  </button>
+                </div>
               </div>
+
+              {generatedPortfolio && (
+                <div className="mt-8 w-full max-w-4xl">
+                  <h3 className="text-2xl font-bold text-black dark:text-zinc-50 mb-6">
+                    {selectedAI === "gemini" ? "🤖 Gemini AI" : "🧠 GPT-4o"}{" "}
+                    생성 포트폴리오
+                  </h3>
+                  <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-6 shadow-lg">
+                    <div className="prose prose-gray dark:prose-invert max-w-none">
+                      <div className="whitespace-pre-wrap text-sm leading-relaxed">
+                        {generatedPortfolio}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {portfolio && (
                 <div className="mt-8 w-full max-w-4xl">
                   <h3 className="text-2xl font-bold text-black dark:text-zinc-50 mb-6">
-                    포트폴리오 데이터
+                    📊 수집된 데이터
                   </h3>
                   <div className="bg-gray-100 dark:bg-gray-800 p-6 rounded-lg">
                     <pre className="text-sm overflow-auto max-h-96">

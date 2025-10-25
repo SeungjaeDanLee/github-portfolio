@@ -11,8 +11,10 @@
     "prebuild": "git config core.autocrlf false"
   },
   "dependencies": {
+    "@google/generative-ai": "^0.24.1",
     "next": "16.0.0",
     "next-auth": "^5.0.0-beta.29",
+    "openai": "^6.7.0",
     "react": "19.2.0",
     "react-dom": "19.2.0"
   },

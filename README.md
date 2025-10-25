@@ -17,18 +17,28 @@ GitHub 계정의 public repository와 README 파일을 분석하여 AI가 자동
 - **README 파일**: 각 프로젝트의 상세 설명 자동 수집
 - **Topics**: 프로젝트 태그 정보
 
-### 🤖 AI 포트폴리오 생성 (준비 중)
+### 🤖 AI 포트폴리오 생성
 
-- 수집된 데이터를 AI에게 전달
-- 자동으로 포트폴리오 생성
-- 사용자 맞춤형 포트폴리오 제공
+- **Gemini AI**: Google Gemini 2.0 Flash를 활용한 포트폴리오 자동 생성
+- **GPT-4o**: OpenAI GPT-4o 지원 (준비 중)
+- 수집된 데이터를 AI에게 전달하여 맞춤형 포트폴리오 생성
+- 마크다운 형식으로 전문적인 포트폴리오 렌더링
+- 배지 이미지 및 링크 자동 포함
+
+### 📄 PDF 다운로드
+
+- 생성된 포트폴리오를 PDF로 내보내기
+- 다중 페이지 지원
+- 고품질 이미지 렌더링
 
 ## 🛠️ 기술 스택
 
-- **Frontend**: Next.js 16, React, TypeScript
-- **Styling**: Tailwind CSS
+- **Frontend**: Next.js 16, React 19, TypeScript
+- **Styling**: Tailwind CSS v4, @tailwindcss/typography
 - **Authentication**: NextAuth v5 (beta)
-- **API**: GitHub REST API
+- **API**: GitHub REST API, Google Gemini API
+- **Markdown**: react-markdown, remark-gfm, rehype-sanitize, rehype-raw
+- **PDF**: jsPDF, html2canvas
 - **Deployment**: Vercel (예정)
 
 ## 🚀 시작하기
@@ -57,8 +67,13 @@ GITHUB_CLIENT_SECRET=your_github_client_secret
 
 # NextAuth 설정
 NEXTAUTH_URL=http://localhost:3000
-NEXTAUTH_SECRET=your_nextauth_secret_key_here
+AUTH_SECRET=your_nextauth_secret_key_here
+
+# Google Gemini API
+GEMINI_API_KEY=your_gemini_api_key_here
 ```
+
+> **Note**: NextAuth v5는 `AUTH_SECRET` 환경 변수를 사용합니다.
 
 ### 4. GitHub OAuth App 생성
 
@@ -144,6 +159,9 @@ src/
 - **다크 모드**: 시스템 설정에 따른 자동 테마 전환
 - **로딩 상태**: 포트폴리오 생성 중 스피너 애니메이션
 - **에러 처리**: 안전한 API 호출 및 사용자 친화적 에러 메시지
+- **텍스트 오버플로우 방지**: 자동 줄바꿈으로 모든 텍스트 화면 내 표시
+- **마크다운 렌더링**: 배지 이미지, 링크, 코드 블록 등 완벽 지원
+- **Prose 스타일링**: @tailwindcss/typography를 활용한 전문적인 타이포그래피
 
 ## 🔒 보안
 
@@ -162,19 +180,24 @@ src/
 - [x] README 파일 수집
 - [x] 데이터 구조화
 - [x] TypeScript 타입 안정성
+- [x] Gemini AI 연동
+- [x] 포트폴리오 자동 생성
+- [x] 마크다운 렌더링 (배지, 이미지, 링크)
+- [x] PDF 내보내기
+- [x] 텍스트 오버플로우 방지
+- [x] 다크 모드 지원
 
 ### 🔄 진행 중
 
-- [ ] AI 연동 (OpenAI/Claude/Gemini)
-- [ ] 포트폴리오 자동 생성
+- [ ] GPT-4o 연동
 - [ ] 포트폴리오 커스터마이징
 
 ### 📋 예정된 기능
 
 - [ ] 포트폴리오 템플릿 선택
 - [ ] 포트폴리오 공유 기능
-- [ ] 포트폴리오 PDF 내보내기
 - [ ] 포트폴리오 통계 대시보드
+- [ ] 다국어 지원
 
 ## 🤝 기여하기
 
@@ -194,4 +217,4 @@ src/
 
 ---
 
-**Made with ❤️ by [Your Name]**
+**Made with ❤️ by Seungjae Lee**

@@ -78,6 +78,31 @@ npm run dev
 
 브라우저에서 `http://localhost:3000`에 접속하세요.
 
+## 🖥️ Windows 사용자를 위한 추가 설정
+
+### Git 설정 (Windows)
+
+```bash
+# 라인 엔딩 문제 해결
+git config core.autocrlf false
+git config core.eol lf
+
+# 기존 파일들의 라인 엔딩 정규화
+git add --renormalize .
+git commit -m "Normalize line endings"
+```
+
+### 의존성 재설치 (Windows)
+
+```bash
+# 기존 node_modules 삭제
+rmdir /s node_modules
+del package-lock.json
+
+# 의존성 재설치
+npm install --legacy-peer-deps
+```
+
 ## 📁 프로젝트 구조
 
 ```

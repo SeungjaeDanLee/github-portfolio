@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "postinstall": "git config core.autocrlf false",
+    "prebuild": "git config core.autocrlf false"
   },
   "dependencies": {
     "next": "16.0.0",

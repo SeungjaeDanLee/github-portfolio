@@ -3,6 +3,7 @@
 import { signIn, signOut, useSession } from "next-auth/react";
 import Image from "next/image";
 import { useState } from "react";
+import Modal from "@/components/Modal";
 
 export default function Home() {
   const { data: session, status } = useSession();
@@ -12,9 +13,15 @@ export default function Home() {
     null
   );
   const [selectedAI, setSelectedAI] = useState<"gemini" | "gpt">("gemini");
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const generatePortfolio = async () => {
     if (!session?.accessToken) return;
+
+    if (selectedAI === "gpt") {
+      setIsModalOpen(true);
+      return;
+    }
 
     setIsGenerating(true);
     try {
@@ -277,6 +284,16 @@ export default function Home() {
             </div>
           )}
         </div>
+        <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>
+          <div className="text-center">
+            <h3 className="text-lg font-medium text-gray-900 dark:text-white">
+              서비스 준비중입니다.
+            </h3>
+            <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+              현재 GPT-4o 기능은 준비중입니다. 빠른 시일 내에 찾아뵙겠습니다.
+            </p>
+          </div>
+        </Modal>
       </main>
     </div>
   );

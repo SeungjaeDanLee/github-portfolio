@@ -5,6 +5,8 @@ export async function POST(request: NextRequest) {
   try {
     const { portfolioData } = await request.json();
 
+    console.log("Received portfolio data:", JSON.stringify(portfolioData, null, 2));
+
     if (!portfolioData) {
       return NextResponse.json(
         { error: "Portfolio data is required" },
@@ -71,9 +73,13 @@ ${index + 1}. ${repo.name}
 위 형식으로 한국어로 포트폴리오를 작성해주세요. 각 섹션은 구체적이고 개인화된 내용으로 작성해주세요.
 `;
 
+    console.log("Generated prompt for Gemini API:", prompt);
+
     const result = await model.generateContent(prompt);
     const response = await result.response;
     const generatedPortfolio = response.text();
+
+    console.log("Received response from Gemini API:", generatedPortfolio);
 
     return NextResponse.json({
       success: true,
@@ -82,7 +88,7 @@ ${index + 1}. ${repo.name}
       projectCount: portfolioData.repositories.length,
     });
   } catch (error) {
-    console.error("Gemini API error:", error);
+    console.error("Gemini API error:", JSON.stringify(error, null, 2));
     return NextResponse.json(
       { error: "Failed to generate portfolio" },
       { status: 500 }
